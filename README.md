@@ -34,7 +34,7 @@ Plug your D1 Mini into your computer.
 
 Go to the Web Installer page: https://ozamnj.github.io/WEMOS-D1-Mini-Travel-Router
 
-Click Connect, select your USB COM port, and click Install.
+Click Connect, select your USB COM port (you can find from device manager in your pc for your Board from com port section, and click Install.
 
 Option B: Manual Compilation (Arduino IDE)
 If you prefer to compile the source code yourself to make further modifications:
