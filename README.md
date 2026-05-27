@@ -32,7 +32,7 @@ You can flash this firmware directly to your D1 Mini right from your browser usi
 
 Plug your D1 Mini into your computer.
 
-Go to the Web Installer page: [Replace this text with your GitHub Pages URL]
+Go to the Web Installer page: https://ozamnj.github.io/WEMOS-D1-Mini-Travel-Router
 
 Click Connect, select your USB COM port, and click Install.
 
