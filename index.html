@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D1 Mini Travel Router Installer</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 50px; background-color: #0f1117; color: #e8eaf0; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #1a1d27; border-radius: 10px; border: 1px solid #2e3347; }
+    h1 { color: #00d4aa; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>D1 Mini Travel Router</h1>
+    <p>Connect your D1 Mini via USB to install the custom firmware directly from your browser.</p>
+    <p>Note: Use Chrome or Edge for WebSerial compatibility.</p>
+    <br>
+    <script type="module" src="https://unpkg.com/esp-web-tools@9.0.4/dist/web/install-button.js?module"></script>
+    <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
+  </div>
+</body>
+</html>
