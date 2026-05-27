@@ -1,0 +1,12 @@
+{
+  "name": "D1 Mini Travel Router",
+  "version": "7.2",
+  "builds": [
+    {
+      "chipFamily": "ESP8266",
+      "parts": [
+        { "path": "router.bin", "offset": 0 }
+      ]
+    }
+  ]
+}
