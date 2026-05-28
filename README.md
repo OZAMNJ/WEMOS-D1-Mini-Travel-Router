@@ -88,6 +88,8 @@ pip install esptool
 esptool.py --port COM3 --baud 460800 write_flash 0x0 router.bin
 ```
 
+> 📝 **Note:** The Arduino source code (`router.ino`) is **not yet publicly available**. Only the pre-compiled `router.bin` is currently distributed. The full source will be released in a future update. To be notified, ⭐ star this repo and watch for releases.
+
 ---
 
 ---
