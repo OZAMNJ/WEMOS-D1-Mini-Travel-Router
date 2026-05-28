@@ -74,6 +74,8 @@ This firmware turns a standard **Wemos D1 Mini (ESP8266)** into a fully function
 3. Click **Connect** → select your COM port → click **Install**
 4. Wait ~30 seconds for flashing to complete
 
+> 💡 **Not sure which COM port to select?** See the [Finding Your COM Port](#-finding-your-com-port-windows--mac--linux) 
+
 ---
 
 ### Option B — Manual Flash with esptool
@@ -87,6 +89,123 @@ esptool.py --port COM3 --baud 460800 write_flash 0x0 router.bin
 ```
 
 ---
+
+---
+
+## 🔌 Finding Your COM Port (Windows / Mac / Linux)
+
+When you click **Connect** in the Web Installer, a browser dialog will ask you to select a serial port. Here's how to find the correct one on every operating system.
+
+---
+
+### 🧰 First — Install the USB Driver
+
+> The D1 Mini uses a **CH340** or **CP2102** USB-to-serial chip. If your port doesn't appear, install the driver first.
+
+| Chip | How to identify | Driver Download |
+|---|---|---|
+| **CH340** | Seen on most cheap D1 Mini clones | [CH340 Driver](https://www.wch-ic.com/downloads/CH341SER_EXE.html) |
+| **CP2102** | Seen on some branded D1 Minis | [CP2102 Driver](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers) |
+
+> After installing, **unplug and replug** your D1 Mini.
+
+---
+
+### 🪹 Windows
+
+**Method 1 — Device Manager (Most Reliable)**
+
+1. Plug your D1 Mini into your PC via USB
+2. Press **`Win + X`** → click **Device Manager**
+3. Expand **Ports (COM & LPT)**
+4. Look for one of these entries:
+   - `USB-SERIAL CH340 (COM3)` → your port is **COM3**
+   - `Silicon Labs CP210x (COM4)` → your port is **COM4**
+   - The number after COM varies — use whatever number appears
+5. That `COMx` value is what you select in the Web Installer
+
+> ⚠️ If nothing appears under **Ports (COM & LPT)**, install the CH340 or CP2102 driver above and retry.
+
+**Method 2 — Quick Check via PowerShell**
+
+```powershell
+[System.IO.Ports.SerialPort]::getportnames()
+```
+Run this in PowerShell. It lists all available COM ports. Plug/unplug the D1 Mini to see which one appears/disappears.
+
+---
+
+### 🍏 macOS
+
+**Method 1 — Terminal (Fastest)**
+
+```bash
+ls /dev/cu.*
+```
+
+Look for one of these in the output:
+- `/dev/cu.usbserial-XXXX` → CH340 chip
+- `/dev/cu.SLAB_USBtoUART` → CP2102 chip
+- `/dev/cu.wchusbserial1410` → CH340 variant
+
+That full path (e.g. `/dev/cu.usbserial-1410`) is your port. Select it in the Web Installer dialog.
+
+**Method 2 — System Information**
+
+1. Click the **Apple menu ** → **About This Mac** → **System Report**
+2. Click **USB** in the left sidebar
+3. Look for **CH340**, **CP2102**, or **USB Serial** in the device list
+
+> ⚠️ On **macOS 12+**, the CH340 driver is built-in. On older macOS, download it from the link in the driver table above.
+
+---
+
+### 🐧 Linux
+
+**Method 1 — Terminal (Fastest)**
+
+```bash
+ls /dev/ttyUSB*
+# or
+ls /dev/ttyACM*
+```
+
+Look for:
+- `/dev/ttyUSB0` → Most common for CH340 and CP2102
+- `/dev/ttyACM0` → Some USB serial adapters
+
+Plug/unplug to confirm which one is your D1 Mini:
+
+```bash
+dmesg | tail -20
+```
+
+Look for a line like:
+```
+[12345.678] usb 1-1.2: ch341-uart converter now attached to ttyUSB0
+```
+
+**Method 2 — Fix Permission Denied Error**
+
+If the Web Installer says **permission denied**, run:
+
+```bash
+sudo usermod -a -G dialout $USER
+```
+
+Then **log out and log back in**. This adds your user to the `dialout` group which controls serial port access.
+
+---
+
+### 📊 Quick Reference Table
+
+| Operating System | Typical Port Name | Where to Find It |
+|---|---|---|
+| **Windows** | `COM3`, `COM4`, `COM5`... | Device Manager → Ports (COM & LPT) |
+| **macOS** | `/dev/cu.usbserial-XXXX` | Terminal: `ls /dev/cu.*` |
+| **Linux** | `/dev/ttyUSB0` | Terminal: `ls /dev/ttyUSB*` |
+
+> 💡 **Tip:** If you have multiple COM ports and are unsure which is the D1 Mini — unplug it, check the list, plug it back in, check again. The new entry is your board.
 
 ## ⚙️ Initial Setup & Usage
 
