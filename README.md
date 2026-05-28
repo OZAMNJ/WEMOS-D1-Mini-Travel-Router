@@ -158,6 +158,48 @@ esptool.py --port COM3 --baud 460800 write_flash 0x0 router.bin
 
 ---
 
+## ⚠️ Disclaimer & No Liability
+
+> **READ CAREFULLY BEFORE USING THIS FIRMWARE.**
+
+This project is open-source software distributed under the **MIT License**. By downloading, flashing, or using this firmware in any way, you agree to the following terms in full:
+
+### 🔴 No Liability — Absolute & Universal
+
+**Manojkumar Chandubhai Prajapati** (the author) and any contributors to this project are **NOT liable**, under **any circumstances**, in **any jurisdiction worldwide**, for:
+
+| Category | Examples |
+|---|---|
+| **Hardware damage** | Bricked D1 Mini, burnt components, failed flash, power surges |
+| **Data loss** | Loss of saved configurations, credentials, or any stored data |
+| **Network misuse** | Violations of hotel, airport, or public Wi-Fi terms of service |
+| **Security incidents** | Unauthorised access, interception, or data breaches |
+| **Legal consequences** | Any local, national, or international law violations by the user |
+| **Financial loss** | Any direct, indirect, incidental, or consequential damages |
+| **Personal injury** | Any physical harm resulting from hardware use or malfunction |
+| **Service interruption** | Loss of internet access, network instability, or device failure |
+
+### 📌 Use At Your Own Risk
+
+- This firmware is provided **"AS IS"**, without warranty of any kind, express or implied.
+- There is **no guarantee** of fitness for a particular purpose, merchantability, or non-infringement.
+- The author makes **no representations** about the suitability of this software for any use.
+- It is the **user's sole responsibility** to ensure compliance with all applicable laws and regulations in their country or region.
+- It is the **user's sole responsibility** to ensure the hardware is operated safely and within its rated specifications.
+
+### 🌍 Jurisdiction
+
+This disclaimer applies globally, without limitation, regardless of the user's country of residence or the jurisdiction in which this software is used. No local, national, or international law supersedes or modifies the liability exclusions stated above as they pertain to open-source software distributed under the MIT License.
+
+### 🔁 Acknowledgement
+
+By using this firmware, you explicitly acknowledge that:
+1. You have read and understood this disclaimer.
+2. You accept all risks associated with flashing and operating this firmware.
+3. You will not hold the author liable for any outcome resulting from its use.
+
+---
+
 ## 📄 License
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
