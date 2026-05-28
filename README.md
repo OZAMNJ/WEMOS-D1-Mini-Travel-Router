@@ -1,110 +1,173 @@
-🌐 D1 Mini Travel Router (Ultimate Edition)
-A lightweight, high-performance NAT travel router designed specifically for the ESP8266 (Wemos D1 Mini).
+<div align="center">
 
-This firmware transforms a standard, low-cost D1 Mini into a secure hardware travel router. It allows you to bypass restrictive hotel/airport captive portals, hide multiple personal devices behind a single MAC address, and enforce custom DNS blocking (like Control D or NextDNS) at the network level.
+# 🌐 D1 Mini Travel Router
+### *Ultimate Edition — Powered by ESP8266*
 
-✨ Key Features
-True Hardware NAT: Leverages the LwIP NAPT implementation to securely route traffic between public upstream networks and your private local devices.
+[![Release](https://img.shields.io/github/v/release/OZAMNJ/WEMOS-D1-Mini-Travel-Router?color=00d4aa&label=Latest%20Release&style=for-the-badge)](https://github.com/OZAMNJ/WEMOS-D1-Mini-Travel-Router/releases)
+[![License](https://img.shields.io/github/license/OZAMNJ/WEMOS-D1-Mini-Travel-Router?style=for-the-badge&color=blue)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-ESP8266-orange?style=for-the-badge&logo=arduino)](https://www.espressif.com/)
+[![Web Installer](https://img.shields.io/badge/Web%20Installer-Available-brightgreen?style=for-the-badge)](https://ozamnj.github.io/WEMOS-D1-Mini-Travel-Router)
 
-Captive Portal Bypass Mode: Engineered with a specific "Pause DNS" toggle that temporarily disables custom DNS routing, allowing seamless logins to public Wi-Fi portal pages.
+**Transform your $5 Wemos D1 Mini into a secure, portable travel router.**
+*Beat hotel Wi-Fi restrictions. Hide all your devices. Block ads at the router level.*
 
-Persistent LittleFS Storage: Built with a robust file system to securely save your custom configurations, SSIDs, and admin passwords across reboots and power cycles without memory corruption.
+[🚀 Flash Now (One Click)](https://ozamnj.github.io/WEMOS-D1-Mini-Travel-Router) · [📖 Setup Guide](#%EF%B8%8F-initial-setup--usage) · [🐛 Report Bug](https://github.com/OZAMNJ/WEMOS-D1-Mini-Travel-Router/issues) · [💡 Request Feature](https://github.com/OZAMNJ/WEMOS-D1-Mini-Travel-Router/issues)
 
-Custom DNS Injection: Instantly route all connected devices through a custom DNS provider to block ads, trackers, and malware at the router level.
+</div>
 
-Modern Web Dashboard: A responsive, dark-mode, asynchronous web UI accessible at 192.168.4.1 that updates metrics in real-time without page reloads.
+---
 
-160MHz Hardware Optimization: Tuned to run at double the standard ESP8266 clock speed, maximizing software NAT throughput and dashboard responsiveness.
+## 🎯 What Is This?
 
-🛠️ Hardware Requirements
-Wemos D1 Mini (ESP8266EX microcontroller)
+This firmware turns a standard **Wemos D1 Mini (ESP8266)** into a fully functional **NAT travel router** that fits in your pocket. It is designed for travelers who need secure, private internet at hotels, airports, cafes, and Airbnbs.
 
-Micro-USB or USB-C Data Cable
+| Problem | Solution |
+|---|---|
+| Hotel Wi-Fi only allows 1 device | Connect all your devices through 1 MAC address |
+| Captive portal blocks internet | One-tap **Pause DNS** bypass mode |
+| Ads and trackers on public Wi-Fi | Custom DNS blocking (NextDNS, Control D) |
+| Configuration lost on reboot | **LittleFS** persistent storage |
+| Slow, unresponsive dashboard | Async dark-mode UI with real-time updates |
 
-A USB power bank or wall adapter for travel use.
+---
 
-🚀 Installation Guide
-There are two ways to install this firmware onto your D1 Mini.
+## ✨ Key Features
 
-Option A: One-Click Web Installer (Recommended)
-You can flash this firmware directly to your D1 Mini right from your browser using ESP Web Tools.
-(Note: This requires a WebSerial compatible browser like Google Chrome or Microsoft Edge).
+- 🔀 **True Hardware NAT** — LwIP NAPT routes traffic between public and private networks securely
+- 🏨 **Captive Portal Bypass** — "Pause DNS" toggle for seamless hotel/airport login
+- 💾 **Persistent LittleFS Storage** — Configs, SSIDs, and passwords survive reboots
+- 🛡️ **Custom DNS Injection** — Block ads, trackers, and malware at router level
+- 🖥️ **Dark-Mode Web Dashboard** — Responsive async UI at `192.168.4.1`, no page reloads
+- ⚡ **160MHz Optimised** — Double clock speed for maximum NAT throughput
+- 🔒 **Password Protected** — Secure admin login for your dashboard
 
-Plug your D1 Mini into your computer.
+---
 
-Go to the Web Installer page: https://ozamnj.github.io/WEMOS-D1-Mini-Travel-Router
+## 🛠️ Hardware Requirements
 
-Click Connect, select your USB COM port (you can find from device manager in your pc for your Board from com port section, and click Install.
+| Component | Details |
+|---|---|
+| **Board** | Wemos D1 Mini (ESP8266EX) |
+| **Cable** | Micro-USB or USB-C **data** cable |
+| **Power** | USB power bank or wall adapter |
+| **Browser** | Chrome or Edge (for Web Installer) |
 
-Option B: Manual Compilation (Arduino IDE)
-If you prefer to compile the source code yourself to make further modifications:
+> **Cost:** The D1 Mini costs around $3–5 USD. This is the cheapest travel router you will ever own.
 
-Download the router.ino file from the source folder.
+---
 
-Open the file in the Arduino IDE.
+## 🚀 Installation
 
-You MUST select the following board parameters for the router to function:
+### Option A — One-Click Web Installer ✅ Recommended
 
-Board: LOLIN(WEMOS) D1 R2 & mini
+> Requires Google Chrome or Microsoft Edge (WebSerial API)
 
-CPU Frequency: 160 MHz (Required for performance)
+1. Plug your D1 Mini into your computer via USB
+2. Click the button below:
 
-lwIP Variant: v2 Higher Bandwidth (CRITICAL: NAT will fail without this)
+<div align="center">
 
-Flash Size: 4MB (FS: 1MB OTA:~1019KB) (Required for LittleFS saving)
+**[👉 Open Web Installer](https://ozamnj.github.io/WEMOS-D1-Mini-Travel-Router)**
 
-Compile and upload to your board.
+</div>
 
-⚙️ Initial Setup & Usage
-Power On: Plug in your flashed D1 Mini. Wait 15 seconds.
+3. Click **Connect** → select your COM port → click **Install**
+4. Wait ~30 seconds for flashing to complete
 
-Connect: Open your phone or laptop and connect to the default setup network:
+---
 
-Network Name: D1Mini-Setup
+### Option B — Manual Flash with esptool
 
-Password: (Leave blank / Open network)
+```bash
+# Install esptool
+pip install esptool
 
-Open Dashboard: Open a web browser and navigate to exactly http://192.168.4.1
+# Flash the firmware (replace COM3 with your port)
+esptool.py --port COM3 --baud 460800 write_flash 0x0 router.bin
+```
 
-Login: Enter the default admin credentials:
+---
 
-Username: admin
+## ⚙️ Initial Setup & Usage
 
-Password: admin
+**Step 1 — Power On**
+> Plug in your D1 Mini and wait **15 seconds** for it to boot.
 
-Configure: * Enter the hotel/airport Wi-Fi details in the Upstream section.
+**Step 2 — Connect to Setup Network**
+| Setting | Value |
+|---|---|
+| Network Name | `D1Mini-Setup` |
+| Password | *(none — open network)* |
 
-Create a secure password for your Local Hotspot.
+**Step 3 — Open Dashboard**
+> Navigate to **http://192.168.4.1** in your browser
 
-Change the Admin Login Password.
+**Step 4 — Login**
+| Field | Default Value |
+|---|---|
+| Username | `admin` |
+| Password | `admin` |
 
-Click Save and Reboot.
+**Step 5 — Configure**
+- Enter your hotel/airport Wi-Fi details in **Upstream**
+- Set a strong password for your **Local Hotspot**
+- Change your **Admin Password**
+- Click **Save and Reboot**
 
-Final Step: Reconnect your phone/laptop to your newly secured hotspot name.
+**Step 6 — Reconnect**
+> Connect all your devices to your new secured hotspot. Done! ✅
 
-🛑 Troubleshooting Captive Portals (Hotel/Airport Wi-Fi)
-If you are at a hotel and the login screen won't pop up:
+---
 
-Open the D1 Mini Dashboard at 192.168.4.1.
+## 🛑 Captive Portal Troubleshooting
 
-Click Pause DNS.
+> **Problem:** Hotel login screen won't appear after connecting through the router.
 
-Disconnect your phone from the D1 Mini Wi-Fi, then reconnect to it (this forces your phone to drop the cached DNS).
+1. Open the dashboard at **192.168.4.1**
+2. Click **Pause DNS**
+3. Disconnect and reconnect your phone to the D1 Mini Wi-Fi (flushes DNS cache)
+4. Open **http://neverssl.com** in your browser — this forces the hotel portal to trigger
+5. Log in to the hotel Wi-Fi
+6. Return to dashboard and click **Resume DNS**
 
-Open a browser and type http://neverssl.com. This will force the hotel's login page to trigger.
+> ⚠️ **Note:** If your phone uses **Android Private DNS** or **iCloud Private Relay**, disable it temporarily before step 3.
 
-Once you are logged into the hotel Wi-Fi, go back to the dashboard and click Resume DNS.
+---
 
-Note: If your phone uses "Private DNS" (Android) or "iCloud Private Relay" (Apple), you must temporarily disable it to trigger captive portals.
+## 📊 Performance
 
-📊 Performance Expectations
-The ESP8266 is a highly capable microcontroller, but it is acting as a software router. Because it features a single-core processor, maximum download speeds through the NAT bridge will physically cap around 5 to 8 Mbps.
+| Metric | Value |
+|---|---|
+| Max Throughput | ~5–8 Mbps |
+| CPU Clock | 160 MHz |
+| NAT Engine | LwIP NAPT (v2 Higher Bandwidth) |
+| Flash Storage | 4MB (1MB LittleFS) |
+| Dashboard | Async, no page reload |
 
-This is more than enough bandwidth for browsing the web, checking emails, making VoIP calls, and streaming standard-definition video while traveling, but it is not designed for heavy 4K downloads.
+> The ESP8266 is a single-core MCU acting as a software router. 5–8 Mbps is sufficient for browsing, email, VoIP calls, and SD video streaming. It is not designed for 4K streaming or large downloads.
 
-🏆 Credits and Acknowledgments
-Manojkumar Chandubhai Prajapati: Project Architect and Lead Developer.
+---
 
-Martin Ger: For the foundational networking inspiration drawn from the esp32_nat_router repository, which demonstrated the immense potential of microcontroller-based NAT routing.
+## 🏆 Credits
 
-Google Gemini: For serving as an AI pair-programmer in optimizing the LwIP network stack, resolving memory persistence via LittleFS, and designing the asynchronous web dashboard.
+| Contributor | Role |
+|---|---|
+| **Manojkumar Chandubhai Prajapati** | Project Architect & Lead Developer |
+| **Martin Ger** | Inspiration from `esp32_nat_router` project |
+| **Google Gemini** | AI pair-programming assistance |
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+Made with ❤️ for travelers everywhere
+
+⭐ **Star this repo if it helped you!** ⭐
+
+</div>
