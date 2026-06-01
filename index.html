@@ -1,23 +1,685 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>D1 Mini Travel Router Installer</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO: Primary title keyword-first -->
+  <title>ESP8266 Travel Router for Wemos D1 Mini | Captive Portal Bypass & NAT Firmware</title>
+
+  <!-- SEO: Meta description matches real search intent -->
+  <meta name="description" content="Open-source ESP8266 travel router firmware for Wemos D1 Mini. Share hotel or airport Wi-Fi with multiple devices, bypass captive portals, enable NAT routing, and flash firmware directly from your browser." />
+
+  <!-- SEO: Canonical URL -->
+  <link rel="canonical" href="https://ozamnj.github.io/WEMOS-D1-Mini-Travel-Router/" />
+
+  <!-- SEO: Open Graph for social sharing -->
+  <meta property="og:title" content="ESP8266 Travel Router Firmware for Wemos D1 Mini" />
+  <meta property="og:description" content="Share hotel or airport Wi-Fi, bypass captive portals, and apply custom DNS on a pocket-sized ESP8266 router. Flash directly from your browser." />
+  <meta property="og:url" content="https://ozamnj.github.io/WEMOS-D1-Mini-Travel-Router/" />
+  <meta property="og:type" content="website" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300..700&display=swap" rel="stylesheet">
+
+  <!-- esp-web-tools for WebSerial flashing -->
+  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+
   <style>
-    body { font-family: sans-serif; text-align: center; margin-top: 50px; background-color: #0f1117; color: #e8eaf0; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #1a1d27; border-radius: 10px; border: 1px solid #2e3347; }
-    h1 { color: #00d4aa; }
+    /* ===== DESIGN TOKENS ===== */
+    :root, [data-theme="dark"] {
+      --color-bg:             #0d1117;
+      --color-surface:        #161b22;
+      --color-surface-2:      #1c2230;
+      --color-surface-offset: #21262d;
+      --color-divider:        #30363d;
+      --color-border:         #3d444d;
+
+      --color-text:           #e6edf3;
+      --color-text-muted:     #8b949e;
+      --color-text-faint:     #484f58;
+
+      --color-primary:        #00d4aa;
+      --color-primary-hover:  #00b894;
+      --color-primary-active: #00a381;
+      --color-primary-dim:    rgba(0, 212, 170, 0.12);
+
+      --color-accent:         #58a6ff;
+      --color-accent-dim:     rgba(88, 166, 255, 0.10);
+
+      --color-warning:        #f0883e;
+      --color-success:        #3fb950;
+
+      --font-display: 'JetBrains Mono', 'Courier New', monospace;
+      --font-body:    'Inter', system-ui, sans-serif;
+
+      --text-xs:   clamp(0.75rem,  0.7rem  + 0.25vw, 0.875rem);
+      --text-sm:   clamp(0.875rem, 0.8rem  + 0.35vw, 1rem);
+      --text-base: clamp(1rem,     0.95rem + 0.25vw, 1.125rem);
+      --text-lg:   clamp(1.125rem, 1rem    + 0.75vw, 1.5rem);
+      --text-xl:   clamp(1.5rem,   1.2rem  + 1.25vw, 2.25rem);
+      --text-2xl:  clamp(2rem,     1.2rem  + 2.5vw,  3.5rem);
+
+      --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem;
+      --space-4: 1rem;    --space-5: 1.25rem; --space-6: 1.5rem;
+      --space-8: 2rem;    --space-10: 2.5rem; --space-12: 3rem;
+      --space-16: 4rem;   --space-20: 5rem;   --space-24: 6rem;
+
+      --radius-sm: 0.375rem; --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;  --radius-xl: 1rem; --radius-full: 9999px;
+
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,0.5);
+
+      --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* ===== BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: var(--space-16);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    body {
+      min-height: 100dvh;
+      font-family: var(--font-body);
+      font-size: var(--text-base);
+      line-height: 1.6;
+      color: var(--color-text);
+      background: var(--color-bg);
+    }
+    img { display: block; max-width: 100%; height: auto; }
+    a { color: var(--color-primary); text-decoration: none; transition: color var(--transition); }
+    a:hover { color: var(--color-primary-hover); }
+    ul[role="list"] { list-style: none; }
+    h1,h2,h3,h4 { text-wrap: balance; line-height: 1.2; }
+    p, li { text-wrap: pretty; }
+    :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; border-radius: var(--radius-sm); }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+
+    /* ===== LAYOUT ===== */
+    .container { max-width: 960px; margin-inline: auto; padding-inline: var(--space-6); }
+    .container--narrow { max-width: 680px; margin-inline: auto; padding-inline: var(--space-6); }
+    .container--wide { max-width: 1200px; margin-inline: auto; padding-inline: var(--space-6); }
+
+    /* ===== NAV ===== */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(13, 17, 23, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--color-divider);
+    }
+    .nav__inner {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-block: var(--space-4);
+    }
+    .nav__brand {
+      display: flex; align-items: center; gap: var(--space-3);
+      color: var(--color-text); font-family: var(--font-display);
+      font-size: var(--text-sm); font-weight: 600; letter-spacing: -0.02em;
+    }
+    .nav__brand svg { flex-shrink: 0; }
+    .nav__links { display: flex; align-items: center; gap: var(--space-6); }
+    .nav__links a { color: var(--color-text-muted); font-size: var(--text-sm); transition: color var(--transition); }
+    .nav__links a:hover { color: var(--color-text); }
+    .nav__cta {
+      display: inline-flex; align-items: center; gap: var(--space-2);
+      background: var(--color-primary); color: #0d1117;
+      padding: var(--space-2) var(--space-4); border-radius: var(--radius-full);
+      font-size: var(--text-sm); font-weight: 600;
+      transition: background var(--transition), transform var(--transition);
+    }
+    .nav__cta:hover { background: var(--color-primary-hover); color: #0d1117; transform: translateY(-1px); }
+
+    /* ===== HERO ===== */
+    .hero {
+      padding-block: clamp(var(--space-16), 10vw, var(--space-24));
+      border-bottom: 1px solid var(--color-divider);
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(0, 212, 170, 0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero__inner { position: relative; text-align: center; }
+    .hero__badge {
+      display: inline-flex; align-items: center; gap: var(--space-2);
+      background: var(--color-primary-dim); color: var(--color-primary);
+      border: 1px solid rgba(0, 212, 170, 0.25); border-radius: var(--radius-full);
+      font-size: var(--text-xs); font-weight: 600; letter-spacing: 0.06em;
+      padding: var(--space-1) var(--space-3); text-transform: uppercase;
+      margin-bottom: var(--space-6);
+    }
+    .hero__badge-dot { width: 6px; height: 6px; background: var(--color-primary); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(1.4); } }
+    .hero__title {
+      font-family: var(--font-body); font-size: var(--text-2xl);
+      font-weight: 700; letter-spacing: -0.03em; color: var(--color-text);
+      margin-bottom: var(--space-6);
+    }
+    .hero__title .accent { color: var(--color-primary); }
+    .hero__description {
+      font-size: var(--text-lg); color: var(--color-text-muted);
+      max-width: 56ch; margin-inline: auto; margin-bottom: var(--space-8);
+      line-height: 1.7;
+    }
+    .hero__actions { display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: var(--space-2);
+      background: var(--color-primary); color: #0d1117;
+      padding: var(--space-3) var(--space-6); border-radius: var(--radius-full);
+      font-weight: 700; font-size: var(--text-sm);
+      transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+      box-shadow: 0 0 24px rgba(0, 212, 170, 0.2);
+    }
+    .btn-primary:hover { background: var(--color-primary-hover); color: #0d1117; transform: translateY(-2px); box-shadow: 0 0 32px rgba(0,212,170,0.35); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: var(--space-2);
+      background: var(--color-surface); color: var(--color-text);
+      border: 1px solid var(--color-border);
+      padding: var(--space-3) var(--space-6); border-radius: var(--radius-full);
+      font-weight: 500; font-size: var(--text-sm);
+      transition: background var(--transition), border-color var(--transition), transform var(--transition);
+    }
+    .btn-secondary:hover { background: var(--color-surface-2); color: var(--color-text); border-color: var(--color-primary); transform: translateY(-2px); }
+
+    /* hero chips */
+    .hero__chips { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: center; margin-top: var(--space-8); }
+    .chip {
+      background: var(--color-surface-offset); color: var(--color-text-muted);
+      border: 1px solid var(--color-divider); border-radius: var(--radius-full);
+      font-size: var(--text-xs); font-family: var(--font-display);
+      padding: var(--space-1) var(--space-3);
+    }
+
+    /* ===== FLASH SECTION ===== */
+    .flash-section {
+      padding-block: clamp(var(--space-12), 7vw, var(--space-20));
+      border-bottom: 1px solid var(--color-divider);
+    }
+    .flash-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: clamp(var(--space-8), 4vw, var(--space-12));
+      max-width: 600px; margin-inline: auto;
+      text-align: center;
+      box-shadow: var(--shadow-md);
+    }
+    .flash-card__icon {
+      width: 56px; height: 56px;
+      background: var(--color-primary-dim);
+      border-radius: var(--radius-lg);
+      display: flex; align-items: center; justify-content: center;
+      margin-inline: auto; margin-bottom: var(--space-4);
+    }
+    .flash-card__title { font-size: var(--text-xl); font-weight: 700; margin-bottom: var(--space-3); }
+    .flash-card__subtitle { color: var(--color-text-muted); margin-bottom: var(--space-6); max-width: 42ch; margin-inline: auto; }
+    .flash-note {
+      display: inline-flex; align-items: center; gap: var(--space-2);
+      background: rgba(240, 136, 62, 0.10); color: var(--color-warning);
+      border: 1px solid rgba(240, 136, 62, 0.2); border-radius: var(--radius-md);
+      font-size: var(--text-xs); padding: var(--space-2) var(--space-3);
+      margin-top: var(--space-4);
+    }
+    esp-web-install-button { --esp-tools-button-color: var(--color-primary); }
+    esp-web-install-button::part(button) {
+      background: var(--color-primary); color: #0d1117;
+      padding: var(--space-3) var(--space-8); border-radius: var(--radius-full);
+      font-size: var(--text-base); font-weight: 700; border: none;
+      cursor: pointer; font-family: var(--font-body);
+      transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+      box-shadow: 0 0 24px rgba(0,212,170,0.25);
+    }
+    esp-web-install-button::part(button):hover {
+      background: var(--color-primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 0 36px rgba(0,212,170,0.4);
+    }
+
+    /* ===== SECTION: WHAT IT DOES ===== */
+    .section {
+      padding-block: clamp(var(--space-12), 7vw, var(--space-20));
+      border-bottom: 1px solid var(--color-divider);
+    }
+    .section-label {
+      display: inline-block;
+      color: var(--color-primary); font-size: var(--text-xs);
+      font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+      margin-bottom: var(--space-3);
+    }
+    .section-title { font-size: var(--text-xl); font-weight: 700; margin-bottom: var(--space-4); letter-spacing: -0.02em; }
+    .section-body { color: var(--color-text-muted); max-width: 60ch; line-height: 1.75; font-size: var(--text-base); }
+    .section-body + .section-body { margin-top: var(--space-4); }
+
+    /* 2-col split layout */
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-16); align-items: center; }
+    @media (max-width: 700px) { .split { grid-template-columns: 1fr; gap: var(--space-10); } }
+
+    /* ===== FEATURE CARDS ===== */
+    .features-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+      gap: var(--space-4); margin-top: var(--space-10);
+    }
+    .feature-card {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); padding: var(--space-6);
+      transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+    }
+    .feature-card:hover { border-color: var(--color-primary); transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    .feature-card__icon {
+      width: 40px; height: 40px; background: var(--color-primary-dim);
+      border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;
+      margin-bottom: var(--space-4); color: var(--color-primary);
+    }
+    .feature-card__title { font-size: var(--text-base); font-weight: 600; margin-bottom: var(--space-2); }
+    .feature-card__desc { font-size: var(--text-sm); color: var(--color-text-muted); line-height: 1.6; }
+
+    /* ===== USE CASES ===== */
+    .usecases-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+      gap: var(--space-3); margin-top: var(--space-8);
+    }
+    .usecase {
+      display: flex; align-items: flex-start; gap: var(--space-3);
+      background: var(--color-surface); border: 1px solid var(--color-divider);
+      border-radius: var(--radius-lg); padding: var(--space-4);
+    }
+    .usecase__icon { font-size: 1.4rem; flex-shrink: 0; line-height: 1; }
+    .usecase__title { font-size: var(--text-sm); font-weight: 600; margin-bottom: var(--space-1); }
+    .usecase__desc { font-size: var(--text-xs); color: var(--color-text-muted); line-height: 1.5; }
+
+    /* ===== SPECS TABLE ===== */
+    .specs-table { width: 100%; border-collapse: collapse; margin-top: var(--space-8); font-size: var(--text-sm); }
+    .specs-table tr { border-bottom: 1px solid var(--color-divider); }
+    .specs-table tr:last-child { border-bottom: none; }
+    .specs-table th, .specs-table td { padding: var(--space-3) var(--space-4); text-align: left; }
+    .specs-table th { color: var(--color-text-faint); font-weight: 500; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.06em; width: 40%; }
+    .specs-table td { color: var(--color-text); font-family: var(--font-display); font-size: var(--text-xs); }
+    .specs-table tr:hover td { color: var(--color-primary); }
+
+    /* ===== HOW TO SECTION ===== */
+    .steps { display: flex; flex-direction: column; gap: var(--space-4); margin-top: var(--space-8); }
+    .step { display: flex; gap: var(--space-4); align-items: flex-start; }
+    .step__num {
+      flex-shrink: 0; width: 36px; height: 36px;
+      background: var(--color-primary-dim); border: 1px solid rgba(0,212,170,0.3);
+      color: var(--color-primary); font-weight: 700; font-size: var(--text-sm);
+      border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center;
+    }
+    .step__body { padding-top: var(--space-1); }
+    .step__title { font-weight: 600; margin-bottom: var(--space-1); font-size: var(--text-base); }
+    .step__desc { color: var(--color-text-muted); font-size: var(--text-sm); }
+
+    /* ===== CTA BAND ===== */
+    .cta-band {
+      padding-block: clamp(var(--space-12), 7vw, var(--space-20));
+      border-bottom: 1px solid var(--color-divider);
+      text-align: center;
+    }
+    .cta-band__title { font-size: var(--text-xl); font-weight: 700; margin-bottom: var(--space-4); letter-spacing: -0.02em; }
+    .cta-band__sub { color: var(--color-text-muted); margin-bottom: var(--space-8); max-width: 50ch; margin-inline: auto; }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      padding-block: var(--space-10);
+      border-top: 1px solid var(--color-divider);
+    }
+    .footer__inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-4); }
+    .footer__brand { display: flex; align-items: center; gap: var(--space-2); color: var(--color-text-muted); font-size: var(--text-sm); }
+    .footer__links { display: flex; gap: var(--space-6); }
+    .footer__links a { color: var(--color-text-muted); font-size: var(--text-sm); transition: color var(--transition); }
+    .footer__links a:hover { color: var(--color-primary); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 600px) {
+      .nav__links { display: none; }
+      .hero__actions { flex-direction: column; align-items: center; }
+      .footer__inner { flex-direction: column; text-align: center; }
+    }
+
+    /* ===== FADE-IN ANIMATION ===== */
+    .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.55s ease, transform 0.55s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>D1 Mini Travel Router</h1>
-    <p>Connect your D1 Mini via USB to install the custom firmware directly from your browser.</p>
-    <p>Note: Use Chrome or Edge for WebSerial compatibility.</p>
-    <br>
-    <script type="module" src="https://unpkg.com/esp-web-tools@9.0.4/dist/web/install-button.js?module"></script>
-    <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
-  </div>
+
+  <!-- SKIP LINK -->
+  <a href="#main" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden">Skip to content</a>
+
+  <!-- NAV -->
+  <nav class="nav" aria-label="Primary navigation">
+    <div class="container">
+      <div class="nav__inner">
+        <!-- SVG Logo: router symbol -->
+        <a href="#" class="nav__brand" aria-label="WEMOS D1 Mini Travel Router home">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+            <rect x="2" y="9" width="24" height="14" rx="3" stroke="currentColor" stroke-width="1.8"/>
+            <rect x="6" y="13" width="4" height="4" rx="1" fill="currentColor" opacity="0.5"/>
+            <rect x="12" y="13" width="4" height="4" rx="1" fill="currentColor" opacity="0.5"/>
+            <path d="M9 9V7M14 9V5M19 9V7" stroke="var(--color-primary)" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="9" cy="5" r="1.5" fill="var(--color-primary)"/>
+            <circle cx="14" cy="3" r="1.5" fill="var(--color-primary)"/>
+            <circle cx="19" cy="5" r="1.5" fill="var(--color-primary)"/>
+          </svg>
+          D1 Travel Router
+        </a>
+        <div class="nav__links">
+          <a href="#flash">Flash</a>
+          <a href="#features">Features</a>
+          <a href="#usecases">Use Cases</a>
+          <a href="#howto">Install</a>
+        </div>
+        <a href="https://github.com/OZAMNJ/WEMOS-D1-Mini-Travel-Router" target="_blank" rel="noopener noreferrer" class="nav__cta">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <main id="main">
+    <section class="hero" aria-label="Hero">
+      <div class="container">
+        <div class="hero__inner">
+          <div class="hero__badge fade-in"><span class="hero__badge-dot"></span>Open Source · ESP8266 · MIT License</div>
+          <h1 class="hero__title fade-in">
+            <span class="accent">ESP8266</span> Travel Router<br>for Wemos D1 Mini
+          </h1>
+          <p class="hero__description fade-in">
+            Turn a $4 Wemos D1 Mini into a portable travel router. Share hotel or airport Wi-Fi with all your devices,
+            bypass captive portals, and apply custom DNS — no OpenWrt hardware needed.
+          </p>
+          <div class="hero__actions fade-in">
+            <a href="#flash" class="btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              Flash Firmware
+            </a>
+            <a href="https://github.com/OZAMNJ/WEMOS-D1-Mini-Travel-Router" target="_blank" rel="noopener noreferrer" class="btn-secondary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+              View Source
+            </a>
+          </div>
+          <div class="hero__chips fade-in">
+            <span class="chip">esp8266</span>
+            <span class="chip">wemos-d1-mini</span>
+            <span class="chip">travel-router</span>
+            <span class="chip">nat-router</span>
+            <span class="chip">captive-portal</span>
+            <span class="chip">iot</span>
+            <span class="chip">arduino</span>
+            <span class="chip">littlefs</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FLASH SECTION -->
+    <section id="flash" class="flash-section" aria-label="Firmware installer">
+      <div class="container">
+        <div class="flash-card fade-in">
+          <div class="flash-card__icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <h2 class="flash-card__title">Browser-Based Firmware Installer</h2>
+          <p class="flash-card__subtitle">
+            Connect your Wemos D1 Mini via USB and flash the latest firmware directly from Chrome or Edge.
+            No drivers, no CLI, no Arduino IDE required.
+          </p>
+          <esp-web-install-button manifest="./manifest.json">
+            <button slot="activate" class="btn-primary" style="font-size:var(--text-base); padding: var(--space-3) var(--space-10);">
+              ⚡ Connect &amp; Install
+            </button>
+          </esp-web-install-button>
+          <div class="flash-note">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Requires Chrome or Edge with WebSerial support. Windows/Linux/macOS.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHAT IT DOES -->
+    <section id="features" class="section" aria-labelledby="features-heading">
+      <div class="container">
+        <span class="section-label fade-in">What it does</span>
+        <h2 class="section-title fade-in" id="features-heading">Full-featured travel router on a $4 chip</h2>
+        <p class="section-body fade-in">
+          The Wemos D1 Mini Travel Router firmware turns an ESP8266 microcontroller into a fully functional
+          NAT router. It connects upstream to any Wi-Fi network — including hotel, airport, Airbnb,
+          or public hotspot Wi-Fi — and shares that connection as a private access point for your devices.
+        </p>
+        <p class="section-body fade-in">
+          Unlike commercial travel routers, this is open-source and fully customizable. You control the DNS,
+          the SSID, the captive portal bypass behavior, and all routing logic directly from the browser-based
+          web dashboard.
+        </p>
+        <div class="features-grid">
+          <div class="feature-card fade-in">
+            <div class="feature-card__icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6l5.5 6L12 6l5.5 6L23 6"/><path d="M1 12l5.5 6L12 12l5.5 6L23 12"/></svg>
+            </div>
+            <div class="feature-card__title">NAT Routing</div>
+            <div class="feature-card__desc">Share a single upstream Wi-Fi connection with multiple client devices via full NAT routing on the ESP8266.</div>
+          </div>
+          <div class="feature-card fade-in">
+            <div class="feature-card__icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
+            </div>
+            <div class="feature-card__title">Captive Portal Bypass</div>
+            <div class="feature-card__desc">Dedicated captive portal detection and bypass logic for hotel Wi-Fi, airport Wi-Fi, and public hotspot networks.</div>
+          </div>
+          <div class="feature-card fade-in">
+            <div class="feature-card__icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            </div>
+            <div class="feature-card__title">Custom DNS Injection</div>
+            <div class="feature-card__desc">Inject custom DNS servers for all downstream clients. Apply DoH, ad-blocking DNS, or private resolvers without touching each device.</div>
+          </div>
+          <div class="feature-card fade-in">
+            <div class="feature-card__icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            </div>
+            <div class="feature-card__title">Dark-Mode Web Dashboard</div>
+            <div class="feature-card__desc">Responsive asynchronous web UI for real-time network control, SSID management, and configuration — served directly from the ESP8266.</div>
+          </div>
+          <div class="feature-card fade-in">
+            <div class="feature-card__icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            </div>
+            <div class="feature-card__title">Persistent Config (LittleFS)</div>
+            <div class="feature-card__desc">All settings stored persistently in flash via LittleFS. Your SSID, password, and DNS settings survive reboots and power cycles.</div>
+          </div>
+          <div class="feature-card fade-in">
+            <div class="feature-card__icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            </div>
+            <div class="feature-card__title">Browser Flash (WebSerial)</div>
+            <div class="feature-card__desc">Flash firmware directly from Chrome or Edge without installing any software. Just connect USB and click.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- USE CASES -->
+    <section id="usecases" class="section" aria-labelledby="usecases-heading">
+      <div class="container">
+        <span class="section-label fade-in">Who it's for</span>
+        <h2 class="section-title fade-in" id="usecases-heading">Built for travellers, makers, and network tinkerers</h2>
+        <p class="section-body fade-in">
+          Anyone who has tried to connect more than one device to a hotel Wi-Fi, or been stuck behind a captive portal with a
+          device that can't handle it, will immediately understand the use case.
+        </p>
+        <div class="usecases-grid">
+          <div class="usecase fade-in"><span class="usecase__icon">🏨</span><div><div class="usecase__title">Hotel Wi-Fi sharing</div><div class="usecase__desc">Pay for one connection, share it across all your devices through your own private AP.</div></div></div>
+          <div class="usecase fade-in"><span class="usecase__icon">✈️</span><div><div class="usecase__title">Airport &amp; lounge Wi-Fi</div><div class="usecase__desc">Handle captive portal login once on the router, then connect all devices seamlessly.</div></div></div>
+          <div class="usecase fade-in"><span class="usecase__icon">🏕️</span><div><div class="usecase__title">Airbnb &amp; shared accommodation</div><div class="usecase__desc">Create a trusted private SSID on top of shared public networks.</div></div></div>
+          <div class="usecase fade-in"><span class="usecase__icon">🛡️</span><div><div class="usecase__title">Custom DNS on the road</div><div class="usecase__desc">Force all downstream devices to use a DoH resolver, ad-blocking DNS, or your home server.</div></div></div>
+          <div class="usecase fade-in"><span class="usecase__icon">🔬</span><div><div class="usecase__title">IoT &amp; maker projects</div><div class="usecase__desc">Use as a NAT bridge for embedded devices that need isolated network access.</div></div></div>
+          <div class="usecase fade-in"><span class="usecase__icon">💻</span><div><div class="usecase__title">Network education</div><div class="usecase__desc">Learn NAT routing, DNS injection, and AP configuration on cheap, accessible hardware.</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SPECS -->
+    <section class="section" aria-labelledby="specs-heading">
+      <div class="container">
+        <div class="split">
+          <div>
+            <span class="section-label fade-in">Hardware &amp; Software</span>
+            <h2 class="section-title fade-in" id="specs-heading">What's inside</h2>
+            <p class="section-body fade-in">
+              The firmware targets the ESP8266 SoC on the Wemos D1 Mini (4MB flash).
+              It is built with the Arduino ESP8266 framework and requires no special hardware beyond a
+              standard micro-USB cable and a browser.
+            </p>
+            <p class="section-body fade-in" style="margin-top:var(--space-4)">
+              The pre-built <code style="background:var(--color-surface-offset);padding:2px 6px;border-radius:4px;font-family:var(--font-display);font-size:0.9em">router.bin</code>
+              is included in the repo for direct flashing. Source code is MIT-licensed.
+            </p>
+          </div>
+          <div class="fade-in">
+            <table class="specs-table" aria-label="Project specifications">
+              <tr><th scope="row">Target hardware</th><td>Wemos D1 Mini (ESP8266)</td></tr>
+              <tr><th scope="row">Flash required</th><td>4 MB</td></tr>
+              <tr><th scope="row">Framework</th><td>Arduino / ESP8266</td></tr>
+              <tr><th scope="row">Storage</th><td>LittleFS (persistent config)</td></tr>
+              <tr><th scope="row">Dashboard</th><td>Async web server (dark mode)</td></tr>
+              <tr><th scope="row">DNS</th><td>Custom injection via firmware</td></tr>
+              <tr><th scope="row">Captive portal</th><td>Dedicated bypass logic</td></tr>
+              <tr><th scope="row">Installer</th><td>ESP Web Tools (WebSerial)</td></tr>
+              <tr><th scope="row">License</th><td>MIT</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW TO INSTALL -->
+    <section id="howto" class="section" aria-labelledby="howto-heading">
+      <div class="container--narrow">
+        <span class="section-label fade-in">Installation guide</span>
+        <h2 class="section-title fade-in" id="howto-heading">Flash in three steps</h2>
+        <p class="section-body fade-in">No Arduino IDE, no drivers, no command line. All you need is Chrome or Edge and a micro-USB cable.</p>
+        <div class="steps">
+          <div class="step fade-in">
+            <div class="step__num">1</div>
+            <div class="step__body">
+              <div class="step__title">Connect your Wemos D1 Mini</div>
+              <div class="step__desc">Plug the D1 Mini into your computer via a data-capable micro-USB cable. Open this page in Chrome or Edge (WebSerial required).</div>
+            </div>
+          </div>
+          <div class="step fade-in">
+            <div class="step__num">2</div>
+            <div class="step__body">
+              <div class="step__title">Click "Connect &amp; Install"</div>
+              <div class="step__desc">Hit the flash button above. Select the correct serial port from the browser dialog. The installer will erase and write the firmware automatically.</div>
+            </div>
+          </div>
+          <div class="step fade-in">
+            <div class="step__num">3</div>
+            <div class="step__body">
+              <div class="step__title">Connect to the router AP</div>
+              <div class="step__desc">After flashing, the D1 Mini boots a Wi-Fi access point. Connect to it, open the web dashboard, and configure your upstream network and DNS settings.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA BAND -->
+    <section class="cta-band" aria-label="Call to action">
+      <div class="container">
+        <h2 class="cta-band__title fade-in">Open source. MIT licensed. Ready to flash.</h2>
+        <p class="cta-band__sub fade-in">Full source code, documentation, and issue tracking on GitHub. Contributions welcome.</p>
+        <div style="display:flex;gap:var(--space-4);justify-content:center;flex-wrap:wrap;" class="fade-in">
+          <a href="https://github.com/OZAMNJ/WEMOS-D1-Mini-Travel-Router" target="_blank" rel="noopener noreferrer" class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+            Star on GitHub
+          </a>
+          <a href="#flash" class="btn-secondary">⚡ Flash Now</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer" aria-label="Footer">
+    <div class="container">
+      <div class="footer__inner">
+        <div class="footer__brand">
+          <svg width="18" height="18" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+            <rect x="2" y="9" width="24" height="14" rx="3" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M9 9V7M14 9V5M19 9V7" stroke="var(--color-primary)" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="9" cy="5" r="1.5" fill="var(--color-primary)"/>
+            <circle cx="14" cy="3" r="1.5" fill="var(--color-primary)"/>
+            <circle cx="19" cy="5" r="1.5" fill="var(--color-primary)"/>
+          </svg>
+          ESP8266 Travel Router for Wemos D1 Mini &mdash; MIT License
+        </div>
+        <div class="footer__links">
+          <a href="https://github.com/OZAMNJ/WEMOS-D1-Mini-Travel-Router" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href="https://github.com/OZAMNJ/WEMOS-D1-Mini-Travel-Router/blob/main/README.md" target="_blank" rel="noopener noreferrer">Docs</a>
+          <a href="https://github.com/OZAMNJ/WEMOS-D1-Mini-Travel-Router/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+          <a href="https://github.com/OZAMNJ/WEMOS-D1-Mini-Travel-Router/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">License</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Scroll fade-in
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
+      });
+    });
+  </script>
+
+  <!-- Structured Data for Google (SEO) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "WEMOS D1 Mini Travel Router",
+    "description": "Open-source ESP8266 travel router firmware for Wemos D1 Mini with NAT, captive portal bypass, hotel Wi-Fi sharing, and custom DNS support.",
+    "url": "https://ozamnj.github.io/WEMOS-D1-Mini-Travel-Router/",
+    "codeRepository": "https://github.com/OZAMNJ/WEMOS-D1-Mini-Travel-Router",
+    "license": "https://opensource.org/licenses/MIT",
+    "applicationCategory": "NetworkingApplication",
+    "operatingSystem": "ESP8266 (Wemos D1 Mini)",
+    "keywords": "ESP8266 travel router, Wemos D1 Mini router, captive portal bypass, hotel WiFi router, NAT router, portable travel router firmware",
+    "author": {
+      "@type": "Person",
+      "name": "Manojkumar Prajapati",
+      "url": "https://github.com/OZAMNJ"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
 </body>
 </html>
